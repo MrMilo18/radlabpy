@@ -1,0 +1,50 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "radlabpy"
+version = "0.1.0"
+description = "Scientific Python package for reproducible analysis of radiation, detector, and particle physics data."
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [
+    {name = "Emilio Rodríguez"}
+]
+license = {text = "MIT"}
+keywords = [
+    "radiation",
+    "detectors",
+    "particle physics",
+    "HEP",
+    "nuclear physics",
+    "scientific computing",
+    "machine learning"
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Physics",
+]
+
+dependencies = [
+    "numpy",
+    "scipy",
+    "pandas",
+    "matplotlib",
+    "scikit-learn",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
