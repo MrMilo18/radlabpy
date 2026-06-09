@@ -1,0 +1,10 @@
+"""
+radlabpy
+
+Radiation Laboratory and Particle Physics Analysis in Python.
+
+A scientific Python package for reproducible analysis of radiation,
+detector, nuclear physics, and subnuclear/HEP data.
+"""
+
+__version__ = "0.1.0"
