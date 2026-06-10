@@ -108,3 +108,25 @@ The project tests can be executed with:
 ```bash
 pytest
 ```
+## High-energy physics kinematics
+
+`radlabpy` also includes basic high-energy physics kinematics utilities through the
+`radlabpy.hep` subpackage.
+
+The current implementation uses natural units with \(c = 1\). Energies, momenta
+and masses must be given in compatible units, for example GeV.
+
+Available observables include:
+
+- transverse momentum \(p_T\)
+- total three-momentum \(p\)
+- relativistic energy \(E\)
+- azimuthal angle \(\phi\)
+- pseudorapidity \(\eta\)
+- invariant mass
+- angular separation \(\Delta R\)
+
+A complete runnable example is available in:
+'''text
+examples/invariant_mass_demo.py
+'''
