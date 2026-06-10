@@ -28,18 +28,29 @@ from .spectra import(
     find_peak_channel,
 )
 
+from .calibration import(
+    linear_calibration,
+    channel_to_energy,
+    energy_to_channel,
+    calibration_residuals,
+)
+
 __all__ = [
+    "poisson_uncertainty",
     "counting_summary",
     "count_rate",
-    "cpm_to_cps",
     "cps_to_cpm",
-    "poisson_uncertainty",
+    "cpm_to_cps",
+    "gaussian",
+    "fwhm_from_sigma",
     "energy_resolution",
     "estimate_peak_area",
     "fit_gaussian_peak",
-    "fwhm_from_sigma",
-    "gaussian",
-    "find_peak_channel",
-    "normalize_spectrum",
     "total_counts",
+    "normalize_spectrum",
+    "find_peak_channel",
+    "linear_calibration",
+    "channel_to_energy",
+    "energy_to_channel",
+    "calibration_residuals",
 ]
