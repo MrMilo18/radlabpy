@@ -6,6 +6,9 @@ __pycache__/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+.coverage
+htmlcov/
+*$py.class
 
 # Virtual environments
 .venv/
@@ -35,3 +38,12 @@ results/
 
 # Logs
 *.log
+
+# Windows / WSL metadata
+*:Zone.Identifier
+
+# OS / editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
