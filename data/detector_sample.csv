@@ -1,0 +1,5 @@
+measurement,emitted,detected,counts,time,coincidences,rate1,rate2,coincidence_window,signal,noise
+1,1000,850,1200,60.0,180,25.0,30.0,1.0e-7,50.0,5.0
+2,1000,830,1180,60.0,175,24.5,29.5,1.0e-7,48.0,5.2
+3,1000,860,1250,60.0,190,26.0,31.0,1.0e-7,52.0,5.1
+

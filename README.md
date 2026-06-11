@@ -4,7 +4,7 @@
 
 `radlabpy` is a scientific Python package for reproducible analysis of radiation, detector, nuclear physics, and subnuclear/high-energy physics data.
 
-The package is designed for academic and research-oriented workflows, with emphasis on modularity, reproducibility, validation, testing, and clear documentation.
+The package is designed for academic and research-oriented workflows, with emphasis on modularity, reproducibility, validation, testing, visualization, and clear documentation.
 
 ## Current version
 
@@ -24,12 +24,14 @@ The current development version includes:
 * linear energy calibration;
 * basic high-energy physics kinematics;
 * basic detector analysis utilities;
+* CSV input/output utilities;
+* scientific plotting utilities;
+* small reproducible sample datasets;
 * unit-tested functions;
 * clean package structure using `src/`.
 
 Future modules may include:
 
-* plotting tools;
 * automatic peak detection;
 * event selection tools;
 * basic Machine Learning utilities;
@@ -66,12 +68,23 @@ The main source code lives inside:
 src/radlabpy/
 ```
 
-Current subpackages include:
+Current modules and subpackages include:
 
 ```text
+radlabpy.io
+radlabpy.plotting
 radlabpy.radiation
 radlabpy.hep
 radlabpy.detectors
+```
+
+The project also includes:
+
+```text
+data/
+examples/
+tests/
+docs/
 ```
 
 ## Radiation analysis utilities
@@ -140,6 +153,131 @@ python examples/geiger_analysis.py
 python examples/spectrum_fit.py
 python examples/energy_calibration.py
 ```
+
+## Input/output utilities
+
+The `radlabpy.io` module provides simple CSV-based input/output tools for reproducible examples and small tabular datasets.
+
+Current features include:
+
+* reading generic CSV files;
+* reading counting CSV files;
+* reading spectrum CSV files;
+* reading event tables;
+* checking that input files exist;
+* checking required columns;
+* writing summary dictionaries or tables to CSV.
+
+Available functions include:
+
+```python
+from radlabpy.io import (
+    read_csv_data,
+    read_spectrum_csv,
+    read_counting_csv,
+    read_event_table,
+    write_summary_csv,
+)
+```
+
+Example:
+
+```python
+from radlabpy.io import read_spectrum_csv
+from radlabpy.radiation import fit_gaussian_peak
+
+spectrum = read_spectrum_csv("data/spectrum_sample.csv")
+
+channels = spectrum["channel"]
+counts = spectrum["counts"]
+
+fit = fit_gaussian_peak(channels, counts)
+
+print(fit)
+```
+
+The I/O module is intentionally limited to reading, validating, and writing data. Physics calculations are handled by `radlabpy.radiation`, `radlabpy.hep`, and `radlabpy.detectors`.
+
+## Scientific plotting utilities
+
+The `radlabpy.plotting` module provides publication-friendly Matplotlib plotting functions.
+
+Current plotting functions include:
+
+```python
+from radlabpy.plotting import (
+    plot_counts_time,
+    plot_spectrum,
+    plot_gaussian_fit,
+    plot_calibration,
+    plot_calibration_residuals,
+    plot_invariant_mass,
+)
+```
+
+Design conventions:
+
+* every plotting function returns `fig, ax`;
+* functions accept `ax=None` or an existing Matplotlib axis;
+* functions do not call `plt.show()` internally;
+* functions do not save figures automatically;
+* plotting is kept separate from physical calculations;
+* labels, titles, grids and annotations can be customized.
+
+Example:
+
+```python
+import matplotlib.pyplot as plt
+
+from radlabpy.io import read_spectrum_csv
+from radlabpy.plotting import plot_gaussian_fit
+from radlabpy.radiation import fit_gaussian_peak
+
+spectrum = read_spectrum_csv("data/spectrum_sample.csv")
+
+channels = spectrum["channel"]
+counts = spectrum["counts"]
+
+fit = fit_gaussian_peak(channels, counts)
+
+fig, ax = plot_gaussian_fit(
+    channels,
+    counts,
+    fit,
+    title="Gaussian fit to sample spectrum",
+    xlabel="Channel",
+    ylabel="Counts",
+    show_errors=True,
+    annotate=True,
+)
+
+plt.show()
+```
+
+To save a figure manually:
+
+```python
+fig.savefig("spectrum_fit.png", dpi=300, bbox_inches="tight")
+```
+
+## Sample data
+
+The repository includes small reproducible datasets in:
+
+```text
+data/
+```
+
+Current sample files include:
+
+```text
+data/geiger_sample.csv
+data/spectrum_sample.csv
+data/hep_events_sample.csv
+data/detector_sample.csv
+```
+
+These files are intentionally small and simple. They are meant for examples, tests, documentation, and quick demonstrations of the package workflow.
 
 ## Detector analysis utilities
 
@@ -232,17 +370,17 @@ python examples/detector_analysis.py
 
 The `radlabpy.hep` subpackage provides basic high-energy physics kinematics utilities.
 
-The current implementation uses natural units with (c = 1). Energies, momenta and masses must be given in compatible units, for example GeV.
+The current implementation uses natural units with `c = 1`. Energies, momenta and masses must be given in compatible units, for example GeV.
 
 Available observables include:
 
-* transverse momentum (p_T);
-* total three-momentum (p);
-* relativistic energy (E);
-* azimuthal angle (\phi);
-* pseudorapidity (\eta);
+* transverse momentum `pT`;
+* total three-momentum `p`;
+* relativistic energy `E`;
+* azimuthal angle `phi`;
+* pseudorapidity `eta`;
 * invariant mass;
-* angular separation (\Delta R).
+* angular separation `Delta R`.
 
 Example:
 
@@ -275,6 +413,30 @@ Run it with:
 python examples/invariant_mass_demo.py
 ```
 
+## Reproducible examples
+
+Current examples include:
+
+```text
+examples/geiger_analysis.py
+examples/spectrum_fit.py
+examples/energy_calibration.py
+examples/invariant_mass_demo.py
+examples/detector_analysis.py
+```
+
+Run all examples manually from the project root with:
+
+```bash
+python examples/geiger_analysis.py
+python examples/spectrum_fit.py
+python examples/energy_calibration.py
+python examples/invariant_mass_demo.py
+python examples/detector_analysis.py
+```
+
+Some examples open Matplotlib windows. Close the figures to let the scripts finish.
+
 ## Testing
 
 All implemented modules include unit tests.
@@ -294,6 +456,8 @@ tests/test_spectra.py
 tests/test_calibration.py
 tests/test_kinematics.py
 tests/test_detectors.py
+tests/test_io.py
+tests/test_plotting.py
 ```
 
 ## Design principles
@@ -301,13 +465,14 @@ tests/test_detectors.py
 `radlabpy` follows these principles:
 
 * modular source code organization;
-* separation between calculation, input/output, visualization and examples;
+* separation between calculation, input/output, visualization, tests and examples;
 * small reusable functions;
-* clear public API through subpackage `__init__.py` files;
+* clear public API through modules and subpackage `__init__.py` files;
 * physically meaningful validation tests;
 * readable docstrings;
 * reproducible examples;
-* development inside a virtual environment.
+* development inside a virtual environment;
+* publication-friendly scientific visualization.
 
 ## Roadmap
 
@@ -320,8 +485,11 @@ tests/test_detectors.py
 * Linear energy calibration.
 * Basic detector analysis.
 * Basic HEP kinematics.
+* CSV input/output utilities.
+* Scientific plotting functions.
 * Unit tests.
-* Minimal examples.
+* Minimal reproducible datasets.
+* Runnable examples.
 * README documentation.
 
 ### Version 0.2.0
@@ -329,8 +497,9 @@ tests/test_detectors.py
 * Improved spectral analysis.
 * Automatic peak detection.
 * More detector utilities.
-* Plotting functions.
+* Event selection tools.
 * More examples and notebooks.
+* Initial command-line interface.
 
 ### Version 0.3.0
 
@@ -338,10 +507,11 @@ tests/test_detectors.py
 * Optional `uproot` integration.
 * Advanced histogram utilities.
 * Examples with open data.
+* Basic Machine Learning utilities.
 
 ### Future versions
 
-* Basic Machine Learning utilities.
 * Signal-background classification.
 * Anomaly detection.
 * Optional integration with more professional HEP workflows.
+* Optional ROOT-oriented workflows through `uproot`.

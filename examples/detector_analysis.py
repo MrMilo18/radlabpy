@@ -1,7 +1,8 @@
 """
 Basic detector analysis example using radlabpy.
 
-This example demonstrates how to calculate:
+This example reads detector-like measurements from data/detector_sample.csv
+and calculates:
 
 - detection efficiency;
 - binomial efficiency uncertainty;
@@ -11,8 +12,14 @@ This example demonstrates how to calculate:
 - accidental coincidence rate;
 - signal-to-noise ratio.
 
-The numerical values are simple and physically interpretable.
+Run from the project root with:
+
+    python examples/detector_analysis.py
 """
+
+from __future__ import annotations
+
+from pathlib import Path
 
 from radlabpy.detectors import (
     accidental_coincidence_rate,
@@ -23,73 +30,69 @@ from radlabpy.detectors import (
     rate_uncertainty,
     signal_to_noise,
 )
+from radlabpy.io import read_csv_data, write_summary_csv
 
 
-def main():
-    """Run a simple detector analysis example."""
+def main() -> None:
+    project_root = Path(__file__).resolve().parents[1]
+    data_path = project_root / "data" / "detector_sample.csv"
+    output_path = project_root / "data" / "detector_summary.csv"
 
-    # Suppose a source emits or generates 1000 particles/events.
-    # The detector records 850 of them.
-    emitted_events = 1000
-    detected_events = 850
+    data = read_csv_data(data_path)
 
-    efficiency = detection_efficiency(detected_events, emitted_events)
-    sigma_efficiency = efficiency_uncertainty(detected_events, emitted_events)
-
-    # Suppose the detector measured 1200 events in 60 seconds.
-    counts = 1200
-    measurement_time = 60.0  # seconds
-
-    rate = event_rate(counts, measurement_time)
-    sigma_rate = rate_uncertainty(counts, measurement_time)
-
-    # Suppose a two-channel system measured 180 coincidences in 60 seconds.
-    coincidences = 180
-    coincidence_measurement_time = 60.0  # seconds
-
-    coincidence = coincidence_rate(coincidences, coincidence_measurement_time)
-
-    # Suppose the two individual detector rates are 25 Hz and 30 Hz.
-    # The coincidence window is 100 ns = 100e-9 s.
-    rate_channel_1 = 25.0  # Hz
-    rate_channel_2 = 30.0  # Hz
-    coincidence_window = 100e-9  # seconds
-
-    accidental = accidental_coincidence_rate(
-        rate_channel_1,
-        rate_channel_2,
-        coincidence_window,
-    )
-
-    # Suppose the signal amplitude is 50 units and the noise is 5 units.
-    signal = 50.0
-    noise = 5.0
-
-    snr = signal_to_noise(signal, noise)
+    summaries = []
 
     print("Basic detector analysis")
     print("=======================")
-    print(f"Emitted events: {emitted_events}")
-    print(f"Detected events: {detected_events}")
-    print(f"Detection efficiency: {efficiency:.4f}")
-    print(f"Efficiency uncertainty: {sigma_efficiency:.4f}")
+    print(f"Input file: {data_path}")
+
+    for _, row in data.iterrows():
+        efficiency = detection_efficiency(row["detected"], row["emitted"])
+        sigma_efficiency = efficiency_uncertainty(row["detected"], row["emitted"])
+
+        rate = event_rate(row["counts"], row["time"])
+        sigma_rate = rate_uncertainty(row["counts"], row["time"])
+
+        coincidence = coincidence_rate(row["coincidences"], row["time"])
+
+        accidental = accidental_coincidence_rate(
+            row["rate1"],
+            row["rate2"],
+            row["coincidence_window"],
+        )
+
+        snr = signal_to_noise(row["signal"], row["noise"])
+
+        summary = {
+            "measurement": int(row["measurement"]),
+            "efficiency": efficiency,
+            "efficiency_uncertainty": sigma_efficiency,
+            "rate": rate,
+            "rate_uncertainty": sigma_rate,
+            "coincidence_rate": coincidence,
+            "accidental_coincidence_rate": accidental,
+            "signal_to_noise": snr,
+        }
+
+        summaries.append(summary)
+
+        print()
+        print(f"Measurement {int(row['measurement'])}")
+        print("----------------")
+        print(f"Detection efficiency:       {efficiency:.4f}")
+        print(f"Efficiency uncertainty:     {sigma_efficiency:.4f}")
+        print(f"Event rate:                 {rate:.4f} counts/s")
+        print(f"Rate uncertainty:           {sigma_rate:.4f} counts/s")
+        print(f"Coincidence rate:           {coincidence:.4f} coincidences/s")
+        print(f"Accidental coincidence rate:{accidental:.6e} Hz")
+        print(f"Signal-to-noise ratio:      {snr:.4f}")
+
+    written_path = write_summary_csv(summaries, output_path)
+
     print()
-    print(f"Counts: {counts}")
-    print(f"Measurement time: {measurement_time:.1f} s")
-    print(f"Event rate: {rate:.4f} counts/s")
-    print(f"Rate uncertainty: {sigma_rate:.4f} counts/s")
-    print()
-    print(f"Coincidences: {coincidences}")
-    print(f"Coincidence rate: {coincidence:.4f} coincidences/s")
-    print()
-    print(f"Channel 1 rate: {rate_channel_1:.4f} Hz")
-    print(f"Channel 2 rate: {rate_channel_2:.4f} Hz")
-    print(f"Coincidence window: {coincidence_window:.2e} s")
-    print(f"Accidental coincidence rate: {accidental:.6e} Hz")
-    print()
-    print(f"Signal: {signal:.4f}")
-    print(f"Noise: {noise:.4f}")
-    print(f"Signal-to-noise ratio: {snr:.4f}")
+    print("Output")
+    print("======")
+    print(f"Summary written to: {written_path}")
 
 
 if __name__ == "__main__":

@@ -1,124 +1,105 @@
 """
 Invariant mass demo using radlabpy.hep.
 
-This example shows how to calculate basic high-energy physics observables
-from simple four-momenta using natural units with c = 1.
+This example reads a small HEP-like event table from
+data/hep_events_sample.csv and computes invariant masses for simple
+two-event systems.
+
+The example uses natural units with c = 1.
+
+Run from the project root with:
+
+    python examples/invariant_mass_demo.py
 """
 
 from __future__ import annotations
 
+from pathlib import Path
+
+import matplotlib.pyplot as plt
 import numpy as np
 
-from radlabpy.hep import (
-    delta_r,
-    energy,
-    eta,
-    invariant_mass,
-    phi,
-    pt,
-)
+from radlabpy.hep import delta_r, eta, invariant_mass, phi, pt
+from radlabpy.io import read_event_table
+from radlabpy.plotting import plot_invariant_mass
 
 
-def main():
-    # ------------------------------------------------------------------
-    # Example 1: two simple particles
-    # ------------------------------------------------------------------
-    # Units are assumed to be compatible, for example GeV.
-    # We use natural units with c = 1.
+def main() -> None:
+    project_root = Path(__file__).resolve().parents[1]
+    data_path = project_root / "data" / "hep_events_sample.csv"
 
-    particle_1 = {
-        "px": 30.0,
-        "py": 10.0,
-        "pz": 40.0,
-        "mass": 0.105,  # approximately a muon mass in GeV
-    }
+    events = read_event_table(data_path)
 
-    particle_2 = {
-        "px": -20.0,
-        "py": -5.0,
-        "pz": -30.0,
-        "mass": 0.105,
-    }
+    print("HEP invariant-mass demo")
+    print("=======================")
+    print(f"Input file: {data_path}")
+    print(f"Number of rows: {len(events)}")
 
-    # Calculate individual energies.
-    E1 = energy(
-        particle_1["px"],
-        particle_1["py"],
-        particle_1["pz"],
-        particle_1["mass"],
+    masses = []
+
+    print()
+    print("Single-object observables")
+    print("=========================")
+
+    for _, row in events.iterrows():
+        object_pt = pt(row["px"], row["py"])
+        object_eta = eta(row["px"], row["py"], row["pz"])
+        object_phi = phi(row["px"], row["py"])
+
+        print(
+            f"Event {int(row['event'])}: "
+            f"pt = {object_pt:8.3f}, "
+            f"eta = {object_eta:8.3f}, "
+            f"phi = {object_phi:8.3f}"
+        )
+
+    print()
+    print("Two-object invariant masses")
+    print("===========================")
+
+    for i in range(0, len(events) - 1, 2):
+        row_1 = events.iloc[i]
+        row_2 = events.iloc[i + 1]
+
+        total_E = row_1["E"] + row_2["E"]
+        total_px = row_1["px"] + row_2["px"]
+        total_py = row_1["py"] + row_2["py"]
+        total_pz = row_1["pz"] + row_2["pz"]
+
+        mass = invariant_mass(total_E, total_px, total_py, total_pz)
+        masses.append(mass)
+
+        eta_1 = eta(row_1["px"], row_1["py"], row_1["pz"])
+        eta_2 = eta(row_2["px"], row_2["py"], row_2["pz"])
+        phi_1 = phi(row_1["px"], row_1["py"])
+        phi_2 = phi(row_2["px"], row_2["py"])
+
+        dr = delta_r(eta_1, phi_1, eta_2, phi_2)
+
+        print(
+            f"Events {int(row_1['event'])}-{int(row_2['event'])}: "
+            f"mass = {mass:8.3f}, "
+            f"Delta R = {dr:8.3f}"
+        )
+
+    masses = np.asarray(masses, dtype=float)
+
+    print()
+    print("Mass distribution summary")
+    print("=========================")
+    print(f"Number of masses: {masses.size}")
+    print(f"Mean mass:        {np.mean(masses):.6f}")
+    print(f"Std mass:         {np.std(masses, ddof=1):.6f}")
+
+    fig, ax = plot_invariant_mass(
+        masses,
+        bins=5,
+        title="Sample invariant-mass distribution",
+        xlabel="Invariant mass [GeV]",
+        ylabel="Events",
     )
 
-    E2 = energy(
-        particle_2["px"],
-        particle_2["py"],
-        particle_2["pz"],
-        particle_2["mass"],
-    )
-
-    # Sum the four-momentum components.
-    E_total = E1 + E2
-    px_total = particle_1["px"] + particle_2["px"]
-    py_total = particle_1["py"] + particle_2["py"]
-    pz_total = particle_1["pz"] + particle_2["pz"]
-
-    # Calculate invariant mass of the two-particle system.
-    m_system = invariant_mass(E_total, px_total, py_total, pz_total)
-
-    # Calculate observables for each particle.
-    pt1 = pt(particle_1["px"], particle_1["py"])
-    pt2 = pt(particle_2["px"], particle_2["py"])
-
-    eta1 = eta(particle_1["px"], particle_1["py"], particle_1["pz"])
-    eta2 = eta(particle_2["px"], particle_2["py"], particle_2["pz"])
-
-    phi1 = phi(particle_1["px"], particle_1["py"])
-    phi2 = phi(particle_2["px"], particle_2["py"])
-
-    dr12 = delta_r(eta1, phi1, eta2, phi2)
-
-    print("=== Two-particle invariant mass demo ===")
-    print()
-    print("Particle 1:")
-    print(f"  E   = {E1:.6f}")
-    print(f"  pt  = {pt1:.6f}")
-    print(f"  eta = {eta1:.6f}")
-    print(f"  phi = {phi1:.6f} rad")
-    print()
-    print("Particle 2:")
-    print(f"  E   = {E2:.6f}")
-    print(f"  pt  = {pt2:.6f}")
-    print(f"  eta = {eta2:.6f}")
-    print(f"  phi = {phi2:.6f} rad")
-    print()
-    print("Two-particle system:")
-    print(f"  E_total  = {E_total:.6f}")
-    print(f"  px_total = {px_total:.6f}")
-    print(f"  py_total = {py_total:.6f}")
-    print(f"  pz_total = {pz_total:.6f}")
-    print(f"  invariant mass = {m_system:.6f}")
-    print()
-    print(f"Delta R between particles = {dr12:.6f}")
-
-    # ------------------------------------------------------------------
-    # Example 2: small synthetic invariant-mass distribution
-    # ------------------------------------------------------------------
-    rng = np.random.default_rng(seed=42)
-
-    n_events = 1000
-
-    # Create a simple synthetic distribution around the system mass.
-    synthetic_masses = rng.normal(loc=m_system, scale=2.0, size=n_events)
-
-    # Keep only positive masses.
-    synthetic_masses = synthetic_masses[synthetic_masses > 0]
-
-    print()
-    print("=== Synthetic invariant-mass distribution ===")
-    print(f"Number of generated masses = {synthetic_masses.size}")
-    print(f"Mean mass                  = {np.mean(synthetic_masses):.6f}")
-    print(f"Standard deviation         = {np.std(synthetic_masses, ddof=1):.6f}")
-    print(f"Minimum mass               = {np.min(synthetic_masses):.6f}")
-    print(f"Maximum mass               = {np.max(synthetic_masses):.6f}")
+    plt.show()
 
 
 if __name__ == "__main__":
