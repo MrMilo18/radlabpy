@@ -26,6 +26,7 @@ The current development version includes:
 * basic detector analysis utilities;
 * CSV input/output utilities;
 * scientific plotting utilities;
+* minimal command-line interface;
 * small reproducible sample datasets;
 * unit-tested functions;
 * clean package structure using `src/`.
@@ -36,7 +37,7 @@ Future modules may include:
 * event selection tools;
 * basic Machine Learning utilities;
 * signal-background classification;
-* simple command-line interface tools.
+* more advanced command-line interface tools.
 
 ## Installation for development
 
@@ -273,6 +274,7 @@ Current sample files include:
 ```text
 data/geiger_sample.csv
 data/spectrum_sample.csv
+data/calibration_sample.csv
 data/hep_events_sample.csv
 data/detector_sample.csv
 ```
@@ -412,6 +414,133 @@ Run it with:
 ```bash
 python examples/invariant_mass_demo.py
 ```
+
+## Command-line interface
+
+`radlabpy` includes a minimal command-line interface called `radlab`.
+
+After installing the package in editable mode:
+
+```bash
+python -m pip install -e .
+```
+
+you can display the general help with:
+
+```bash
+radlab --help
+```
+
+and check the installed version with:
+
+```bash
+radlab --version
+```
+
+The CLI is intended for quick, reproducible analyses from the terminal. It does not replace the Python API; instead, it provides a lightweight interface to selected package functionality.
+
+### Geiger counting analysis
+
+Analyze a CSV file with radiation counting data:
+
+```bash
+radlab geiger data/geiger_sample.csv
+```
+
+You can also specify the name of the counts column:
+
+```bash
+radlab geiger data/geiger_sample.csv --counts-col counts
+```
+
+This command reads counting data and prints a basic statistical summary including the number of measurements, mean, standard deviation, minimum and maximum counts.
+
+### Spectrum analysis
+
+Analyze a radiation spectrum:
+
+```bash
+radlab spectrum data/spectrum_sample.csv
+```
+
+Fit a Gaussian peak to the spectrum:
+
+```bash
+radlab spectrum data/spectrum_sample.csv --fit-gaussian
+```
+
+You can also specify the column names:
+
+```bash
+radlab spectrum data/spectrum_sample.csv --channel-col channel --counts-col counts
+```
+
+This command prints the total counts, the peak channel and, optionally, Gaussian fit parameters such as amplitude, mean, sigma and FWHM.
+
+### Energy calibration
+
+Run a linear channel-energy calibration:
+
+```bash
+radlab calibration data/calibration_sample.csv
+```
+
+You can also specify the channel and energy columns:
+
+```bash
+radlab calibration data/calibration_sample.csv --channel-col channel --energy-col energy
+```
+
+The calibration convention is:
+
+```text
+E = slope * channel + intercept
+```
+
+The command prints the slope, intercept, coefficient of determination `R²`, and residual statistics.
+
+### HEP invariant mass analysis
+
+Analyze a simple HEP-like event table:
+
+```bash
+radlab hep data/hep_events_sample.csv
+```
+
+The input file must contain columns compatible with a four-momentum:
+
+```text
+E, px, py, pz
+```
+
+The command computes invariant masses event by event and prints a statistical summary.
+
+The current convention uses natural units with `c = 1`:
+
+```text
+m² = E² - px² - py² - pz²
+```
+
+Rows with physically inconsistent four-momenta, where `m²` is negative beyond numerical tolerance, are rejected.
+
+### Detector analysis
+
+Analyze simple detector data:
+
+```bash
+radlab detector data/detector_sample.csv
+```
+
+The command automatically detects which calculation can be performed from the available columns. Currently supported column combinations are:
+
+```text
+detected, emitted
+counts, time
+signal, noise
+```
+
+Depending on the available columns, the command computes detection efficiency, event rate or signal-to-noise ratio.
+
 
 ## Reproducible examples
 
