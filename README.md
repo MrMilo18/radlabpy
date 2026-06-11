@@ -63,6 +63,8 @@ This version does not attempt to replace specialized software such as ROOT, Gean
 
 ## Installation for development
 
+The package was developed and tested mainly on WSL/Linux. Since it uses standard Python scientific libraries and no platform-specific system calls, it should also run on macOS and Windows with a compatible Python installation.
+
 Clone the repository:
 
 ```bash

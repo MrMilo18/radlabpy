@@ -4,6 +4,12 @@ This user guide provides a short introduction to the current functionality of `r
 
 `radlabpy` is a scientific Python package for reproducible analysis of radiation, detector, nuclear physics, and high-energy physics data. It can be used both as a Python package and through a minimal command-line interface.
 
+## Platform compatibility
+
+`radlabpy` is developed and tested primarily on WSL/Linux, but it is written in pure Python and should work on Linux, macOS and Windows, provided that the required dependencies are installed.
+
+The installation commands differ slightly depending on the operating system, especially for virtual environment activation.
+
 ## Installation
 
 From the root directory of the project, create and activate a virtual environment:
